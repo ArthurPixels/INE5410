@@ -60,7 +60,7 @@ int main (int argc, char *argv[])
 	for(int i = 0; i<num_threads; i++) {
 		int* arg = malloc(sizeof(int));
 		*arg = i;
-    	pthread_create(&threads[i], NULL, initialize, (void *)&arg);
+    	pthread_create(&threads[i], NULL, initialize, (void *)arg);
   	}
 	for(int i = 0; i<num_threads; i++) {
     	pthread_join(threads[i], NULL);
@@ -73,7 +73,7 @@ int main (int argc, char *argv[])
 	for(int i = 0; i<num_threads; i++) {
 		int* arg = malloc(sizeof(int));
 		*arg = i;
-    	pthread_create(&threads[i], NULL, sumVectors, (void *)&arg);
+    	pthread_create(&threads[i], NULL, sumVectors, (void *)arg);
   	}
 	for(int i = 0; i<num_threads; i++) {
     	pthread_join(threads[i], NULL);

@@ -10,7 +10,8 @@ int tam_vet, num_threads;
 
 void* initialize (void* arg) {
   	int start = *((int *)arg);
-  	for(int i = start*(tam_vet/num_threads); i<(start+1)*(tam_vet/num_threads); i++) {
+  	for(int i = start*(tam_vet/num_threads);
+			i<(start+1)*(tam_vet/num_threads) && i<tam_vet; i++) {
     	a[i] = i;
 		b[i] = i;
 		c[i] = 0;
@@ -21,7 +22,8 @@ void* initialize (void* arg) {
 
 void* sumVectors (void* arg) {
   	int start = *((int *)arg);
-  	for(int i = start*(tam_vet/num_threads); i<(start+1)*(tam_vet/num_threads); i++) {
+  	for(int i = start*(tam_vet/num_threads);
+			i<(start+1)*(tam_vet/num_threads) && i<tam_vet; i++) {
     	c[i] = a[i] + b[i];
   	}
 	free(arg);

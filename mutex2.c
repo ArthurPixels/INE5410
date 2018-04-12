@@ -39,10 +39,7 @@ void *multiplicar_thread(void *arg) {
 
         for (i = 0; i < tamanho_matriz; i++) {
             int temp = matriz1[_linha_atual][i] * matriz2[i][_coluna_atual];
-
-            pthread_mutex_lock(&mutex_result);
             resultado[_linha_atual][_coluna_atual] += temp;
-            pthread_mutex_unlock(&mutex_result);
         }
 
         pthread_mutex_lock(&mutex);
@@ -51,12 +48,16 @@ void *multiplicar_thread(void *arg) {
             coluna_atual = 0;
             linha_atual += 1;
         }
+        _linha_atual = linha_atual;
+        _coluna_atual = coluna_atual;
         pthread_mutex_unlock(&mutex);
     }
     pthread_exit(NULL);
 }
 
 int main(int argc, char* argv[]) {
+    linha_atual = 0;
+    coluna_atual = 0;
     //Verifica se recebemos os argumentos necessários
     if (argc < 3) {
         printf("Use: %s [tamanho da matriz] [threads]\n", argv[0]);

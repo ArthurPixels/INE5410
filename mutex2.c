@@ -17,7 +17,7 @@ int **matriz2;
 int **resultado;
 int tamanho_matriz;
 int linha_atual, coluna_atual;
-pthread_mutex_t mutex, mutex_result;
+pthread_mutex_t mutex;
 
 //Você deve tornar essa função segura para ser executada por mais de uma
 //thread ao mesmo tempo. Para isso você deve usar um mutex para sincronizar
@@ -67,7 +67,6 @@ int main(int argc, char* argv[]) {
     tamanho_matriz = atoi(argv[1]);
     int num_threads = atoi(argv[2]);
     pthread_mutex_init(&mutex, NULL);
-    pthread_mutex_init(&mutex_result, NULL);
 
     //Aloca a memória das matrizes e já gera os números aleatórios das
     //matrizes 1 e 2.
@@ -92,7 +91,6 @@ int main(int argc, char* argv[]) {
     liberar_matrizes();
 
     pthread_mutex_destroy(&mutex);
-    pthread_mutex_destroy(&mutex_result);
 
     return 0;
 }

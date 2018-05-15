@@ -104,44 +104,55 @@ int main (int argc, char** argv) {
   }
   // Incorrect params, non compatible
 
+  matrix_t * a = (matrix_t*) malloc(sizeof(matrix_t));
+  matrix_t * b = (matrix_t*) malloc(sizeof(matrix_t));
+  matrix_t * c = (matrix_t*) malloc(sizeof(matrix_t));
+  a->height = sqr_mat_size;
+  b->height = sqr_mat_size;
+  c->height = sqr_mat_size;
+  a->length = sqr_mat_size;
+  b->length = sqr_mat_size;
+  c->length = sqr_mat_size;
+  a->data = (int*) malloc(sizeof(int)*sqr_mat_size*sqr_mat_size);
+  b->data = (int*) malloc(sizeof(int)*sqr_mat_size*sqr_mat_size);
+  c->data = (int*) malloc(sizeof(int)*sqr_mat_size*sqr_mat_size);
+
   if(rank == 0) { //mestre
-    matrix_t * a = (matrix_t*) malloc(sizeof(matrix_t));
-    matrix_t * b = (matrix_t*) malloc(sizeof(matrix_t));
-    matrix_t * c = (matrix_t*) malloc(sizeof(matrix_t));
-    a->height = sqr_mat_size;
-    b->height = sqr_mat_size;
-    c->height = sqr_mat_size;
-    a->length = sqr_mat_size;
-    b->length = sqr_mat_size;
-    c->length = sqr_mat_size;
-    a->data = (int*) malloc(sizeof(int)*sqr_mat_size*sqr_mat_size);
-    b->data = (int*) malloc(sizeof(int)*sqr_mat_size*sqr_mat_size);
-    c->data = (int*) malloc(sizeof(int)*sqr_mat_size*sqr_mat_size);
-
-    printf("Generating matrices\n");
-
-    generate_matrix(rseed, a);
-    generate_matrix(rseed++, b);
 
     printf("Multiplying...\n");
-
-    for (int i=1; i< n_matrices; i++) {
-      for (int i=1; i< size; i++) {
-        generate_matrix(rseed++, b);
-        MPI_Send(&signal_c, 1, MPI_INT, i%size, 0, MPI_COMM_WORLD);
-        MPI_Send(&a->data, sqr_mat_size*sqr_mat_size, MPI_INT, i%size, 0, MPI_COMM_WORLD);
-        MPI_Send(&b->data, sqr_mat_size*sqr_mat_size, MPI_INT, i%size, 0, MPI_COMM_WORLD);
-      }
-
-      memcpy(a->data, c->data, sqr_mat_size*sqr_mat_size*sizeof(int));
+    int k= n_matrices;
+    for (int i = 1; i <= k/2; i++) {
+      generate_matrix(rseed, a);
+      generate_matrix(rseed++, b);
+      MPI_Send(&signal_c, 1, MPI_INT, i%size, 0, MPI_COMM_WORLD);
+      MPI_Send(&a->data, sqr_mat_size*sqr_mat_size,
+        MPI_INT, i, 0, MPI_COMM_WORLD);
+      MPI_Send(&b->data, sqr_mat_size*sqr_mat_size,
+        MPI_INT, i, 0, MPI_COMM_WORLD);
     }
+    while(k > 1) {
+      for (int i = 1; i <= k/2; i++) {
+        MPI_Recv(&c->data, sqr_mat_size*sqr_mat_siz,
+          MPI_INT, i, MPI_ANY_TAG, MPI_COMM_WORLD, &st);
+        MPI_Recv(&c->data, sqr_mat_size*sqr_mat_siz,
+          MPI_INT, i, MPI_ANY_TAG, MPI_COMM_WORLD, &st);
+
+        // send task
+        MPI_Send(&signal_c, 1, MPI_INT, i%size, 0, MPI_COMM_WORLD);
+        MPI_Send(&a->data, sqr_mat_size*sqr_mat_size,
+          MPI_INT, i, 0, MPI_COMM_WORLD);
+        MPI_Send(&b->data, sqr_mat_size*sqr_mat_size,
+          MPI_INT, i, 0, MPI_COMM_WORLD);
+      }
+    }
+    MPI_Recv(&c->data, sqr_mat_size*sqr_mat_siz,
+      MPI_INT, 1, MPI_ANY_TAG, MPI_COMM_WORLD, &st);
   }
   else { // escravo
-    int continuar = 1;
-    while (continuar) {
+    while (true) {
       MPI_Recv(&signal_c, 1,
         MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &st);
-      if(signal_c[0] == 0) return;
+      if(signal_c[0] == -1) return;
       MPI_Recv(&a->data, sqr_mat_size*sqr_mat_siz,
         MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &st);
       MPI_Recv(&b->data, sqr_mat_size*sqr_mat_siz,
@@ -165,7 +176,7 @@ int main (int argc, char** argv) {
   printf("\n");
 
   if(rank == 0) {
-    printf("Summing result for checkups...\n");
+    printf("Summoning result for checkups...\n");
 
     unsigned int modsum = modular_sum(c, MRAND*1000);
 
